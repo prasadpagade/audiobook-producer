@@ -1,6 +1,25 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import GeneratedShowcase from './GeneratedShowcase';
+
+const EMOTION_VARIANTS = [
+  {
+    key: 'dramatic',
+    label: 'Dramatic',
+    description: 'High-stakes narration with bold pacing.',
+  },
+  {
+    key: 'suspenseful',
+    label: 'Suspenseful',
+    description: 'Tense delivery with rising intensity.',
+  },
+  {
+    key: 'neutral',
+    label: 'Neutral',
+    description: 'Balanced, documentary-style narration.',
+  },
+];
 
 export default function DemoSection() {
   const [text, setText] = useState('');
@@ -10,6 +29,8 @@ export default function DemoSection() {
   const [audioUrl, setAudioUrl] = useState('');
   const [emotion, setEmotion] = useState('');
   const [voice, setVoice] = useState('');
+  const [generatedAudios, setGeneratedAudios] = useState<any[]>([]);
+  const [variationsLoading, setVariationsLoading] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const waveformRef = useRef<HTMLDivElement | null>(null);
@@ -25,6 +46,7 @@ export default function DemoSection() {
     setAudioUrl('');
     setEmotion('');
     setVoice('');
+    setGeneratedAudios([]);
 
     try {
       const formData = new FormData();
@@ -43,10 +65,67 @@ export default function DemoSection() {
       setAudioUrl(data.audio_url);
       setEmotion(data.emotion);
       setVoice(data.voice);
+
+      const previewSnippet =
+        type === 'text'
+          ? text.trim().slice(0, 140) || 'Custom text input'
+          : file
+          ? `Uploaded file: ${file.name}`
+          : 'Uploaded file';
+
+      generateEmotionVariations(type, previewSnippet);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const buildFormData = (inputType: 'text' | 'file') => {
+    const formData = new FormData();
+    if (inputType === 'text' && text.trim()) {
+      formData.append('text', text);
+    } else if (inputType === 'file' && file) {
+      formData.append('file', file);
+    }
+    return formData;
+  };
+
+  const generateEmotionVariations = async (inputType: 'text' | 'file', previewSnippet: string) => {
+    if (inputType === 'text' && !text.trim()) return;
+    if (inputType === 'file' && !file) return;
+
+    setVariationsLoading(true);
+    try {
+      const results = [];
+      for (const variant of EMOTION_VARIANTS) {
+        const formData = buildFormData(inputType);
+        if (!formData.has('text') && !formData.has('file')) continue;
+        formData.append('target_emotion', variant.key);
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/generate`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Variation generation failed');
+
+        results.push({
+          id: `${variant.key}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          emotion: data.emotion ?? variant.key,
+          audio_url: data.audio_url,
+          voice: data.voice,
+          title: `${variant.label} Sample`,
+          description: variant.description,
+          preview: previewSnippet,
+        });
+      }
+      setGeneratedAudios(results);
+    } catch (variationError) {
+      console.error('Variation generation failed', variationError);
+    } finally {
+      setVariationsLoading(false);
     }
   };
 
@@ -134,83 +213,95 @@ export default function DemoSection() {
     };
   }, [audioUrl, emotion]);
 
-
   return (
-    <section className="py-24 bg-slate-900 min-h-screen flex flex-col items-center text-white">
-      <div className="max-w-3xl w-full px-6">
-        <h1 className="text-5xl font-bold mb-4 text-center">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
-            Try the AI Audiobook Demo
-          </span>
-        </h1>
-        <p className="text-slate-400 text-center mb-10">
-          Generate emotion-aware audiobook clips from your own text or file.
-        </p>
+    <>
+      <section className="py-24 bg-slate-900 min-h-screen flex flex-col items-center text-white">
+        <div className="max-w-3xl w-full px-6">
+          <h1 className="text-5xl font-bold mb-4 text-center">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
+              Try the AI Audiobook Demo
+            </span>
+          </h1>
+          <p className="text-slate-400 text-center mb-10">
+            Generate emotion-aware audiobook clips from your own text or file.
+          </p>
 
-        <div className="bg-slate-800/70 backdrop-blur-md border border-slate-700 rounded-2xl p-6 shadow-xl">
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Enter text to generate..."
-            className="w-full h-40 p-4 rounded-lg bg-slate-900/60 border border-slate-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
-          />
-          <input
-            type="file"
-            accept=".txt"
-            onChange={handleFileChange}
-            className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 
-                       file:rounded-md file:border-0 file:text-sm file:font-semibold 
-                       file:bg-blue-600/30 file:text-white hover:file:bg-blue-600/50 mb-4"
-          />
+          <div className="bg-slate-800/70 backdrop-blur-md border border-slate-700 rounded-2xl p-6 shadow-xl">
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Enter text to generate..."
+              className="w-full h-40 p-4 rounded-lg bg-slate-900/60 border border-slate-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
+            />
+            <input
+              type="file"
+              accept=".txt"
+              onChange={handleFileChange}
+              className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 
+                         file:rounded-md file:border-0 file:text-sm file:font-semibold 
+                         file:bg-blue-600/30 file:text-white hover:file:bg-blue-600/50 mb-4"
+            />
 
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={() => handleGenerate('text')}
-              disabled={loading}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
-                loading
-                  ? 'bg-blue-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105'
-              }`}
-            >
-              {loading ? 'Generating...' : 'Generate from Text'}
-            </button>
-            <button
-              onClick={() => handleGenerate('file')}
-              disabled={loading}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
-                loading
-                  ? 'bg-gray-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-gray-600 to-gray-700 hover:shadow-lg hover:scale-105'
-              }`}
-            >
-              {loading ? 'Uploading...' : 'Upload File'}
-            </button>
-          </div>
-
-          {error && <p className="text-red-400 text-sm mt-3">{error}</p>}
-
-          {audioUrl && (
-            <div className="mt-8 text-center space-y-4">
-              <p className="text-sm text-slate-400">
-                Emotion detected: <span className="text-blue-400 font-semibold">{emotion}</span>
-              </p>
-              <p className="text-xs text-slate-500">Voice used: {voice}</p>
-
-              <audio
-                key={audioUrl}
-                ref={audioRef}
-                crossOrigin="anonymous"
-                controls
-                className="w-full max-w-md mx-auto rounded-lg bg-slate-800 border border-slate-700 shadow-lg"
-                src={audioUrl}
-              />
-
-              <div ref={waveformRef} className="flex justify-center gap-1 items-end h-24 mt-4"></div>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => handleGenerate('text')}
+                disabled={loading}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
+                  loading
+                    ? 'bg-blue-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-lg hover:scale-105'
+                }`}
+              >
+                {loading ? 'Generating...' : 'Generate from Text'}
+              </button>
+              <button
+                onClick={() => handleGenerate('file')}
+                disabled={loading}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
+                  loading
+                    ? 'bg-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-gray-600 to-gray-700 hover:shadow-lg hover:scale-105'
+                }`}
+              >
+                {loading ? 'Uploading...' : 'Upload File'}
+              </button>
             </div>
+
+            {error && <p className="text-red-400 text-sm mt-3">{error}</p>}
+
+            {audioUrl && (
+              <div className="mt-8 text-center space-y-4">
+                <p className="text-sm text-slate-400">
+                  Emotion detected: <span className="text-blue-400 font-semibold">{emotion}</span>
+                </p>
+                <p className="text-xs text-slate-500">Voice used: {voice}</p>
+
+                <audio
+                  key={audioUrl}
+                  ref={audioRef}
+                  crossOrigin="anonymous"
+                  controls
+                  className="w-full max-w-md mx-auto rounded-lg bg-slate-800 border border-slate-700 shadow-lg"
+                  src={audioUrl}
+                />
+
+                <div ref={waveformRef} className="flex justify-center gap-1 items-end h-24 mt-4"></div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {(variationsLoading || generatedAudios.length > 0) && (
+        <div className="w-full bg-slate-900 py-4">
+          {variationsLoading && (
+            <p className="text-center text-slate-400 mb-4">Creating emotion variations...</p>
+          )}
+          {generatedAudios.length > 0 && (
+            <GeneratedShowcase generatedAudios={generatedAudios} />
           )}
         </div>
-      </div>
-    </section>
+      )}
+    </>
   );
 }

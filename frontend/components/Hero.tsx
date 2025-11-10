@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Play, Sparkles, Wand2 } from 'lucide-react'
 
@@ -77,7 +78,10 @@ export default function Hero() {
           transition={{ duration: 0.8, delay: 0.6 }}
           className="flex flex-col sm:flex-row gap-4 justify-center items-center"
         >
-          <button className="group relative px-8 py-4 bg-gradient-to-r from-primary-500 to-accent-500 rounded-full font-semibold text-white text-lg shadow-xl hover:shadow-2xl hover:shadow-primary-500/50 transition-all duration-300 flex items-center gap-2">
+          <Link
+            href="#live-demo"
+            className="group relative px-8 py-4 bg-gradient-to-r from-primary-500 to-accent-500 rounded-full font-semibold text-white text-lg shadow-xl hover:shadow-2xl hover:shadow-primary-500/50 transition-all duration-300 flex items-center gap-2"
+          >
             <Wand2 className="w-5 h-5 group-hover:rotate-12 transition-transform" />
             Try Demo
             <motion.span
@@ -85,12 +89,17 @@ export default function Hero() {
               animate={{ scale: [0, 1.5] }}
               transition={{ duration: 0.6, repeat: Infinity }}
             />
-          </button>
+          </Link>
           
-          <button className="px-8 py-4 bg-white/10 backdrop-blur-sm rounded-full font-semibold text-white text-lg border border-white/20 hover:bg-white/20 transition-all duration-300 flex items-center gap-2">
+          <a
+            href="https://audiobook-producer-ui.vercel.app/"
+            target="_blank"
+            rel="noreferrer"
+            className="px-8 py-4 bg-white/10 backdrop-blur-sm rounded-full font-semibold text-white text-lg border border-white/20 hover:bg-white/20 transition-all duration-300 flex items-center gap-2"
+          >
             <Play className="w-5 h-5" />
             Watch Demo
-          </button>
+          </a>
         </motion.div>
 
         {/* Floating elements */}

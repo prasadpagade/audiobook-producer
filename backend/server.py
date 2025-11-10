@@ -100,7 +100,12 @@ async def detect_emotion(text: str = Form(...)):
 # Generate Audiobook Clip (Text or File)
 # ----------------------------------------------------
 @app.post("/generate")
-async def generate(request: Request, file: UploadFile = File(None), text: str = Form(None)):
+async def generate(
+    request: Request,
+    file: UploadFile = File(None),
+    text: str = Form(None),
+    target_emotion: str = Form(None)
+):
     """
     Accepts:
       - text input OR .txt file
@@ -122,22 +127,31 @@ async def generate(request: Request, file: UploadFile = File(None), text: str = 
         # Truncate for demo
         content = content[:500]
 
-        # ----- Emotion detection -----
-        prompt = f"""
-        You are an expert emotion classifier for audiobook narration.
-        Choose ONE emotion that matches the text below.
-        Options: ["calm", "sad", "happy", "excited", "dramatic", "suspenseful", "neutral"].
+        allowed_emotions = {
+            "calm", "sad", "happy", "excited", "dramatic", "suspenseful", "neutral"
+        }
 
-        Text: \"\"\"{content}\"\"\"
-        Respond with only one word from the list.
-        """
-        emotion_response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.2,
-        )
+        if target_emotion and target_emotion.lower() in allowed_emotions:
+            emotion = target_emotion.lower()
+        else:
+            # ----- Emotion detection -----
+            prompt = f"""
+            You are an expert emotion classifier for audiobook narration.
+            Choose ONE emotion that matches the text below.
+            Options: ["calm", "sad", "happy", "excited", "dramatic", "suspenseful", "neutral"].
 
-        emotion = emotion_response.choices[0].message.content.strip().lower()
+            Text: \"\"\"{content}\"\"\"
+            Respond with only one word from the list.
+            """
+            emotion_response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2,
+            )
+
+            emotion = emotion_response.choices[0].message.content.strip().lower()
+            if emotion not in allowed_emotions:
+                emotion = "neutral"
 
         voice_map = {
             "calm": "en-US-AriaNeural",

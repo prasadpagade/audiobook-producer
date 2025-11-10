@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "🚀 Run Frontend + Backend",
+      "configurations": ["Backend", "Frontend"]
+    }
+  ],
+  "configurations": [
+    {
+      "name": "Backend",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/server.py",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Frontend",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/frontend"
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+  }
+
+  * {
+    border-color: transparent;
+  }
+  
+  body {
+    background-color: rgb(15 23 42);
+    color: rgb(241 245 249);
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-500 via-accent-500 to-primary-600 bg-clip-text text-transparent;
+  }
+  
+  .glass-effect {
+    @apply backdrop-blur-xl bg-white/10 border border-white/20;
+  }
+  
+  .glow-effect {
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #0ea5e9, #d946ef);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #0284c7, #c026d3);
+}
+
+/* 🔮 Emotion-reactive glow animations */
+@keyframes pulseGlow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2)); }
+  50% { filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.6)); }
+}
+
+.glow-calm div {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(0, 200, 255, 0.4));
+}
+
+.glow-happy div {
+  animation: pulseGlow 1.6s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(255, 180, 0, 0.5));
+}
+
+.glow-excited div {
+  animation: pulseGlow 1.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px rgba(255, 70, 70, 0.6));
+}
+
+.glow-sad div {
+  animation: pulseGlow 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(70, 120, 255, 0.4));
+}
+
+.glow-dramatic div {
+  animation: pulseGlow 1.8s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(200, 70, 255, 0.6));
+}
+
+.glow-suspenseful div {
+  animation: pulseGlow 1.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(255, 120, 0, 0.5));
+}
+

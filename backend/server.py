@@ -32,7 +32,7 @@ app.add_middleware(
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "https://audiobook-producer.vercel.app",
-        "https://audiobook-producer-git-main-prasads-projects-9efa731b.vercel.app"
+        "https://audiobook-producer-git-main-prasads-projects-9efa731b.vercel.app",
         "https://audiobook-producer-19wdv8nwg-prasads-projects-9efa731b.vercel.app"
     ],
     allow_credentials=True,
